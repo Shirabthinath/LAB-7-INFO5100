@@ -1,52 +1,34 @@
 package ui;
 
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.FlowLayout;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import model.User;
 import utility.DatabaseConnector;
-import utility.UserValidator;
 
 /**
- * Create screen: a form that validates the input, adds the user into the
- * database, and then navigates to the {@link ViewJPanel}.
+ * Create screen: validates the input, adds the student into the database,
+ * shows a welcome popup with the photo, and then navigates to the
+ * {@link ViewJPanel}.
  *
  * @author Shirabthinath Shivaji
- * @version 1.0
+ * @version 2.0
  */
 public class FormJPanel extends JPanel {
 
     /** The main window's bottom panel, used to navigate to the view screen. */
     private final JPanel bottomPanel;
 
-    /** Name input. */
-    private final JTextField nameTextField = new JTextField(22);
-
-    /** Age input. */
-    private final JTextField ageTextField = new JTextField(22);
-
-    /** One radio button per college; only one can be selected. */
-    private final JRadioButton[] collegeRadioButtons = new JRadioButton[Colleges.ALL.length];
-
-    /** Groups the college radio buttons. */
-    private final ButtonGroup collegeButtonGroup = new ButtonGroup();
-
-    /** Hobbies input. */
-    private final JTextArea hobbyTextArea = new JTextArea(4, 22);
+    /** The input fields. */
+    private final StudentDetailsPanel detailsPanel = new StudentDetailsPanel();
 
     /**
      * Creates the form.
@@ -58,108 +40,56 @@ public class FormJPanel extends JPanel {
         initComponents();
     }
 
-    /** Builds and lays out the form components. */
+    /** Builds and lays out the components. */
     private void initComponents() {
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Theme.BACKGROUND);
         setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        JLabel titleLabel = new JLabel("Create User");
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 22f));
+        add(Theme.title("Add Student"), BorderLayout.NORTH);
 
-        JPanel collegePanel = new JPanel(new GridBagLayout());
-        GridBagConstraints rc = new GridBagConstraints();
-        rc.anchor = GridBagConstraints.LINE_START;
-        rc.gridx = 0;
-        for (int i = 0; i < Colleges.ALL.length; i++) {
-            collegeRadioButtons[i] = new JRadioButton(Colleges.ALL[i]);
-            collegeRadioButtons[i].setActionCommand(Colleges.ALL[i]);
-            collegeButtonGroup.add(collegeRadioButtons[i]);
-            rc.gridy = i;
-            collegePanel.add(collegeRadioButtons[i], rc);
-        }
+        JPanel center = new JPanel(new BorderLayout());
+        center.setOpaque(false);
+        center.add(detailsPanel, BorderLayout.NORTH);
+        JScrollPane scroll = new JScrollPane(center);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        center.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setOpaque(false);
+        scroll.setOpaque(false);
+        add(scroll, BorderLayout.CENTER);
 
-        hobbyTextArea.setLineWrap(true);
-        hobbyTextArea.setWrapStyleWord(true);
-
-        JButton submitButton = new JButton("Submit");
+        JButton clearButton = Theme.button("Clear");
+        JButton submitButton = Theme.button("Submit");
+        clearButton.addActionListener(evt -> detailsPanel.clearAll());
         submitButton.addActionListener(this::submitButtonActionPerformed);
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(8, 8, 8, 8);
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 2;
-        c.anchor = GridBagConstraints.LINE_START;
-        add(titleLabel, c);
-        c.gridwidth = 1;
-
-        addRow(1, "Name:", nameTextField);
-        addRow(2, "Age:", ageTextField);
-        addRow(3, "College:", collegePanel);
-        addRow(4, "Hobbies:", new JScrollPane(hobbyTextArea));
-
-        c.gridx = 1;
-        c.gridy = 5;
-        add(submitButton, c);
-
-        // push everything to the top-left
-        c.gridx = 2;
-        c.gridy = 6;
-        c.weightx = 1;
-        c.weighty = 1;
-        add(new JLabel(), c);
+        JLabel hint = new JLabel("<html><font color='#C8102E'>*</font> required field</html>");
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        south.setOpaque(false);
+        south.add(clearButton);
+        south.add(submitButton);
+        south.add(hint);
+        add(south, BorderLayout.SOUTH);
     }
 
     /**
-     * Adds a label and component on one row.
-     *
-     * @param row       the grid row
-     * @param label     the label text
-     * @param component the input component
-     */
-    private void addRow(int row, String label, JComponent component) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(8, 8, 8, 8);
-        c.gridy = row;
-        c.gridx = 0;
-        c.anchor = GridBagConstraints.FIRST_LINE_END;
-        add(new JLabel(label), c);
-        c.gridx = 1;
-        c.anchor = GridBagConstraints.LINE_START;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        add(component, c);
-    }
-
-    /**
-     * Validates the form, adds the user into the database, shows a popup and
-     * navigates to the view screen.
+     * Validates the form, adds the student into the database, shows a popup
+     * and navigates to the view screen.
      *
      * @param evt the button click
      */
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {
         try {
-            User userObject = new User();
-            userObject.setName(this.nameTextField.getText().trim());
-            userObject.setAge(UserValidator.parseAge(this.ageTextField.getText()));
-            // getSelection() is null when no radio button is selected
-            userObject.setCollege(this.collegeButtonGroup.getSelection().getActionCommand());
-            userObject.setHobby(this.hobbyTextArea.getText().trim());
-
-            String error = UserValidator.checkName(userObject.getName());
-            if (error == null) {
-                error = UserValidator.checkHobby(userObject.getHobby());
-            }
-            if (error != null) {
-                JOptionPane.showMessageDialog(this, error, "Oops!", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+            User userObject = detailsPanel.readUser();
 
             // All validations have passed: add the userObject into the database
             DatabaseConnector.addUser(userObject);
             System.out.println("Added user into the database");
 
-            // Popup: "Welcome <name> to <college>"
-            JOptionPane.showMessageDialog(this, userObject, "Success!", JOptionPane.INFORMATION_MESSAGE);
+            // Popup: "Welcome <name> to <college>" with the photo, if any
+            JOptionPane.showMessageDialog(this, userObject, "Success!",
+                    JOptionPane.INFORMATION_MESSAGE,
+                    StudentDetailsPanel.loadPhoto(userObject.getPhotoPath(), 90));
 
             // Navigate to the View J Panel
             ViewJPanel viewJPanelObject = new ViewJPanel();
@@ -167,20 +97,15 @@ public class FormJPanel extends JPanel {
             CardLayout layout = (CardLayout) this.bottomPanel.getLayout();
             layout.next(bottomPanel);
 
-        } catch (NullPointerException ne) {
-            // when the user does not select a college radio button
-            JOptionPane.showMessageDialog(this, "Please select your college.", "Oops!",
-                    JOptionPane.WARNING_MESSAGE);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Please enter your age correctly (1 to 120).", "Oops!",
-                    JOptionPane.WARNING_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Oops!", JOptionPane.WARNING_MESSAGE);
+        } catch (SQLIntegrityConstraintViolationException e) {
+            JOptionPane.showMessageDialog(this,
+                    "This email is already registered. Please use a different email.",
+                    "Duplicate Email", JOptionPane.WARNING_MESSAGE);
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Could not save to the database:\n" + e.getMessage(),
                     "Failed!", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Oops, something went wrong!", "Failed!",
-                    JOptionPane.ERROR_MESSAGE);
-            System.out.println(e.getMessage());
         }
     }
 }

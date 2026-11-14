@@ -1,14 +1,14 @@
 package ui;
 
 /**
- * The colleges a user can choose from.
+ * The colleges a student can choose from.
  *
  * @author Shirabthinath Shivaji
- * @version 1.0
+ * @version 2.0
  */
 public final class Colleges {
 
-    /** College names shown in the radio buttons and the combo box. */
+    /** College names shown in the drop-down. */
     public static final String[] ALL = {
         "College of Engineering",
         "Khoury College of Computer Sciences",
