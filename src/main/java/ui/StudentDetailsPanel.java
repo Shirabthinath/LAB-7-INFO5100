@@ -1,33 +1,16 @@
 package ui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.Insets;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SpinnerDateModel;
-import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import model.User;
 import utility.UserValidator;
@@ -36,188 +19,290 @@ import utility.UserValidator;
  * All the input fields for one student, used by both the create screen
  * ({@link FormJPanel}) and the view screen ({@link ViewJPanel}), so the two
  * screens always show the same fields and use the same validation.
+ * <p>
+ * The layout is designed in the NetBeans GUI Builder (Design view).
  *
  * @author Shirabthinath Shivaji
- * @version 2.0
+ * @version 3.0
  */
-public class StudentDetailsPanel extends JPanel {
+public class StudentDetailsPanel extends javax.swing.JPanel {
 
     /** Size in pixels of the photo preview. */
     private static final int PREVIEW_SIZE = 120;
 
-    /** Placeholder shown first in the college drop-down. */
-    private static final String SELECT_COLLEGE = "-- Select college --";
-
-    /** Placeholder shown first in the continent drop-down. */
-    private static final String SELECT_CONTINENT = "-- Select continent --";
-
-    /** First name input. */
-    private final JTextField firstNameTextField = new JTextField(20);
-
-    /** Last name input. */
-    private final JTextField lastNameTextField = new JTextField(20);
-
-    /** Gender choice: male. */
-    private final JRadioButton maleRadioButton = new JRadioButton("Male");
-
-    /** Gender choice: female. */
-    private final JRadioButton femaleRadioButton = new JRadioButton("Female");
-
-    /** Gender choice: other. */
-    private final JRadioButton otherRadioButton = new JRadioButton("Other");
-
-    /** Makes the gender choices mutually exclusive. */
-    private final ButtonGroup genderButtonGroup = new ButtonGroup();
-
-    /** Date of birth picker (month/day/year). */
-    private final JSpinner dobSpinner;
-
-    /** Shows the age calculated from the date of birth. */
-    private final JLabel ageValueLabel = new JLabel();
-
-    /** Phone input. */
-    private final JTextField phoneTextField = new JTextField(20);
-
-    /** Email input. */
-    private final JTextField emailTextField = new JTextField(20);
-
-    /** College choice. */
-    private final JComboBox<String> collegeComboBox = new JComboBox<>();
-
-    /** Continent choice. */
-    private final JComboBox<String> continentComboBox = new JComboBox<>();
-
-    /** Experience input (optional). */
-    private final JTextArea experienceTextArea = new JTextArea(3, 20);
-
-    /** Hobbies input (optional). */
-    private final JTextArea hobbyTextArea = new JTextArea(3, 20);
-
-    /** Opens a file chooser to pick a photo. */
-    private final JButton browseButton = new JButton("Upload Photo...");
-
-    /** Removes the chosen photo. */
-    private final JButton removePhotoButton = new JButton("Remove");
-
-    /** Shows the chosen photo. */
-    private final JLabel photoPreviewLabel = new JLabel("No photo", SwingConstants.CENTER);
-
     /** Path of the chosen photo, or {@code null} when there is none. */
     private String photoPath;
 
-    /** Creates the fields. */
+    /**
+     * Creates new form StudentDetailsPanel
+     */
     public StudentDetailsPanel() {
+        initComponents();
+
+        // date of birth picker: today minus 20 years, from 1920 up to today
         Calendar cal = Calendar.getInstance();
         Date today = cal.getTime();
         cal.add(Calendar.YEAR, -20);
         Date initial = cal.getTime();
         cal.set(1920, Calendar.JANUARY, 1);
         Date earliest = cal.getTime();
-        dobSpinner = new JSpinner(new SpinnerDateModel(initial, earliest, today, Calendar.DAY_OF_MONTH));
+        dobSpinner.setModel(new SpinnerDateModel(initial, earliest, today, Calendar.DAY_OF_MONTH));
         dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "MM/dd/yyyy"));
         dobSpinner.addChangeListener(e -> updateAgeLabel());
-        initComponents();
-        updateAgeLabel();
-    }
 
-    /** Builds and lays out the components. */
-    private void initComponents() {
-        setLayout(new GridBagLayout());
-        setOpaque(false);
-
-        genderButtonGroup.add(maleRadioButton);
-        genderButtonGroup.add(femaleRadioButton);
-        genderButtonGroup.add(otherRadioButton);
-        JPanel genderPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        genderPanel.setOpaque(false);
-        for (JRadioButton r : new JRadioButton[]{maleRadioButton, femaleRadioButton, otherRadioButton}) {
-            r.setOpaque(false);
-            genderPanel.add(r);
-        }
-
-        JPanel dobPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        dobPanel.setOpaque(false);
-        dobPanel.add(dobSpinner);
-        dobPanel.add(new JLabel("    Age: "));
-        dobPanel.add(ageValueLabel);
-
-        collegeComboBox.addItem(SELECT_COLLEGE);
+        // drop-down options
         for (String c : Colleges.ALL) {
             collegeComboBox.addItem(c);
         }
-
-        continentComboBox.addItem(SELECT_CONTINENT);
         for (String c : Continents.ALL) {
             continentComboBox.addItem(c);
         }
-
-        hobbyTextArea.setLineWrap(true);
-        hobbyTextArea.setWrapStyleWord(true);
-        experienceTextArea.setLineWrap(true);
-        experienceTextArea.setWrapStyleWord(true);
-
-        phoneTextField.setToolTipText("10 digits, e.g. 617-555-0142");
-        emailTextField.setToolTipText("e.g. name@northeastern.edu");
-
-        int row = 0;
-        addRow(row++, "First Name", true, firstNameTextField);
-        addRow(row++, "Last Name", true, lastNameTextField);
-        addRow(row++, "Gender", true, genderPanel);
-        addRow(row++, "Date of Birth", true, dobPanel);
-        addRow(row++, "Phone", true, phoneTextField);
-        addRow(row++, "Email", true, emailTextField);
-        addRow(row++, "College", true, collegeComboBox);
-        addRow(row++, "Continent", true, continentComboBox);
-        addRow(row++, "Experience", false, new JScrollPane(experienceTextArea));
-        addRow(row++, "Hobbies", false, new JScrollPane(hobbyTextArea));
-
-        // Photo column on the right
-        photoPreviewLabel.setPreferredSize(new Dimension(PREVIEW_SIZE, PREVIEW_SIZE));
-        photoPreviewLabel.setBorder(BorderFactory.createLineBorder(java.awt.Color.GRAY));
-        browseButton.addActionListener(e -> choosePhoto());
-        removePhotoButton.addActionListener(e -> setPhoto(null));
-        JPanel photoButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        photoButtons.setOpaque(false);
-        photoButtons.add(browseButton);
-        photoButtons.add(removePhotoButton);
-        JPanel photoPanel = new JPanel(new BorderLayout(0, 6));
-        photoPanel.setOpaque(false);
-        photoPanel.add(new JLabel("Photo (optional)", SwingConstants.CENTER), BorderLayout.NORTH);
-        photoPanel.add(photoPreviewLabel, BorderLayout.CENTER);
-        photoPanel.add(photoButtons, BorderLayout.SOUTH);
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 2;
-        c.gridy = 0;
-        c.gridheight = 5;
-        c.anchor = GridBagConstraints.NORTH;
-        c.insets = new Insets(5, 30, 5, 5);
-        add(photoPanel, c);
+        updateAgeLabel();
     }
 
     /**
-     * Adds a label and its input on one row.
-     *
-     * @param row       the grid row
-     * @param label     the label text
-     * @param required  whether to show a red star
-     * @param component the input component
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
-    private void addRow(int row, String label, boolean required, JComponent component) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(5, 5, 5, 5);
-        c.gridy = row;
-        c.gridx = 0;
-        c.anchor = GridBagConstraints.FIRST_LINE_END;
-        String text = required
-                ? "<html>" + label + " <font color='#C8102E'>*</font></html>"
-                : label;
-        add(new JLabel(text), c);
-        c.gridx = 1;
-        c.anchor = GridBagConstraints.LINE_START;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        add(component, c);
-    }
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        genderButtonGroup = new javax.swing.ButtonGroup();
+        firstNameLabel = new javax.swing.JLabel();
+        lastNameLabel = new javax.swing.JLabel();
+        genderLabel = new javax.swing.JLabel();
+        dobLabel = new javax.swing.JLabel();
+        phoneLabel = new javax.swing.JLabel();
+        emailLabel = new javax.swing.JLabel();
+        collegeLabel = new javax.swing.JLabel();
+        continentLabel = new javax.swing.JLabel();
+        experienceLabel = new javax.swing.JLabel();
+        hobbyLabel = new javax.swing.JLabel();
+        firstNameTextField = new javax.swing.JTextField();
+        lastNameTextField = new javax.swing.JTextField();
+        maleRadioButton = new javax.swing.JRadioButton();
+        femaleRadioButton = new javax.swing.JRadioButton();
+        otherRadioButton = new javax.swing.JRadioButton();
+        dobSpinner = new javax.swing.JSpinner();
+        ageLabel = new javax.swing.JLabel();
+        ageValueLabel = new javax.swing.JLabel();
+        phoneTextField = new javax.swing.JTextField();
+        emailTextField = new javax.swing.JTextField();
+        collegeComboBox = new javax.swing.JComboBox<>();
+        continentComboBox = new javax.swing.JComboBox<>();
+        experienceScrollPane = new javax.swing.JScrollPane();
+        experienceTextArea = new javax.swing.JTextArea();
+        hobbyScrollPane = new javax.swing.JScrollPane();
+        hobbyTextArea = new javax.swing.JTextArea();
+        photoTitleLabel = new javax.swing.JLabel();
+        photoPreviewLabel = new javax.swing.JLabel();
+        browseButton = new javax.swing.JButton();
+        removePhotoButton = new javax.swing.JButton();
+
+        setOpaque(false);
+
+        firstNameLabel.setText("<html>First Name <font color='#C8102E'>*</font></html>");
+
+        lastNameLabel.setText("<html>Last Name <font color='#C8102E'>*</font></html>");
+
+        genderLabel.setText("<html>Gender <font color='#C8102E'>*</font></html>");
+
+        dobLabel.setText("<html>Date of Birth <font color='#C8102E'>*</font></html>");
+
+        phoneLabel.setText("<html>Phone <font color='#C8102E'>*</font></html>");
+
+        emailLabel.setText("<html>Email <font color='#C8102E'>*</font></html>");
+
+        collegeLabel.setText("<html>College <font color='#C8102E'>*</font></html>");
+
+        continentLabel.setText("<html>Continent <font color='#C8102E'>*</font></html>");
+
+        experienceLabel.setText("Experience");
+
+        hobbyLabel.setText("Hobbies");
+
+        firstNameTextField.setColumns(20);
+
+        lastNameTextField.setColumns(20);
+
+        genderButtonGroup.add(maleRadioButton);
+        maleRadioButton.setText("Male");
+        maleRadioButton.setOpaque(false);
+
+        genderButtonGroup.add(femaleRadioButton);
+        femaleRadioButton.setText("Female");
+        femaleRadioButton.setOpaque(false);
+
+        genderButtonGroup.add(otherRadioButton);
+        otherRadioButton.setText("Other");
+        otherRadioButton.setOpaque(false);
+
+        ageLabel.setText("Age:");
+
+        ageValueLabel.setText("0");
+
+        phoneTextField.setColumns(20);
+        phoneTextField.setToolTipText("10 digits, e.g. 617-555-0142");
+
+        emailTextField.setColumns(20);
+        emailTextField.setToolTipText("e.g. name@northeastern.edu");
+
+        collegeComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Select college --" }));
+
+        continentComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Select continent --" }));
+
+        experienceTextArea.setColumns(20);
+        experienceTextArea.setLineWrap(true);
+        experienceTextArea.setRows(3);
+        experienceTextArea.setWrapStyleWord(true);
+        experienceScrollPane.setViewportView(experienceTextArea);
+
+        hobbyTextArea.setColumns(20);
+        hobbyTextArea.setLineWrap(true);
+        hobbyTextArea.setRows(3);
+        hobbyTextArea.setWrapStyleWord(true);
+        hobbyScrollPane.setViewportView(hobbyTextArea);
+
+        photoTitleLabel.setText("Photo (optional)");
+        photoTitleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        photoPreviewLabel.setText("No photo");
+        photoPreviewLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        photoPreviewLabel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(128, 128, 128)));
+
+        browseButton.setText("Upload Photo...");
+        browseButton.setFocusPainted(false);
+        browseButton.addActionListener(this::browseButtonActionPerformed);
+
+        removePhotoButton.setText("Remove");
+        removePhotoButton.setFocusPainted(false);
+        removePhotoButton.addActionListener(this::removePhotoButtonActionPerformed);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(5, 5, 5)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(firstNameLabel)
+                        .addComponent(lastNameLabel)
+                        .addComponent(genderLabel)
+                        .addComponent(dobLabel)
+                        .addComponent(phoneLabel)
+                        .addComponent(emailLabel)
+                        .addComponent(collegeLabel)
+                        .addComponent(continentLabel)
+                        .addComponent(experienceLabel)
+                        .addComponent(hobbyLabel))
+                    .addGap(10, 10, 10)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(firstNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lastNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(maleRadioButton)
+                            .addGap(6, 6, 6)
+                            .addComponent(femaleRadioButton)
+                            .addGap(6, 6, 6)
+                            .addComponent(otherRadioButton))
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(dobSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(20, 20, 20)
+                            .addComponent(ageLabel)
+                            .addGap(6, 6, 6)
+                            .addComponent(ageValueLabel))
+                        .addComponent(phoneTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(emailTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(collegeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(continentComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(experienceScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(hobbyScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(30, 30, 30)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                        .addComponent(photoTitleLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(photoPreviewLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(browseButton)
+                            .addGap(4, 4, 4)
+                            .addComponent(removePhotoButton)))
+                    .addGap(0, 5, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(5, 5, 5)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(firstNameLabel)
+                                .addComponent(firstNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(lastNameLabel)
+                                .addComponent(lastNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(genderLabel)
+                                .addComponent(maleRadioButton)
+                                .addComponent(femaleRadioButton)
+                                .addComponent(otherRadioButton))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(dobLabel)
+                                .addComponent(dobSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(ageLabel)
+                                .addComponent(ageValueLabel))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(phoneLabel)
+                                .addComponent(phoneTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(emailLabel)
+                                .addComponent(emailTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(collegeLabel)
+                                .addComponent(collegeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(continentLabel)
+                                .addComponent(continentComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(experienceLabel)
+                                .addComponent(experienceScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(10, 10, 10)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(hobbyLabel)
+                                .addComponent(hobbyScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(photoTitleLabel)
+                            .addGap(6, 6, 6)
+                            .addComponent(photoPreviewLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(6, 6, 6)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(browseButton)
+                                .addComponent(removePhotoButton))))
+                    .addGap(0, 5, Short.MAX_VALUE))
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose a profile photo");
+        chooser.setFileFilter(new FileNameExtensionFilter("Images (jpg, jpeg, png, gif)",
+                "jpg", "jpeg", "png", "gif"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            setPhoto(chooser.getSelectedFile().getAbsolutePath());
+        }
+    }//GEN-LAST:event_browseButtonActionPerformed
+
+    private void removePhotoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removePhotoButtonActionPerformed
+        setPhoto(null);
+    }//GEN-LAST:event_removePhotoButtonActionPerformed
 
     /** Recalculates the age shown next to the date of birth. */
     private void updateAgeLabel() {
@@ -230,17 +315,6 @@ public class StudentDetailsPanel extends JPanel {
     private LocalDate getDateOfBirth() {
         Date d = (Date) dobSpinner.getValue();
         return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
-    /** Lets the user pick an image file and shows it in the preview. */
-    private void choosePhoto() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Choose a profile photo");
-        chooser.setFileFilter(new FileNameExtensionFilter("Images (jpg, jpeg, png, gif)",
-                "jpg", "jpeg", "png", "gif"));
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            setPhoto(chooser.getSelectedFile().getAbsolutePath());
-        }
     }
 
     /**
@@ -412,4 +486,38 @@ public class StudentDetailsPanel extends JPanel {
     public void focusFirstField() {
         firstNameTextField.requestFocusInWindow();
     }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel ageLabel;
+    private javax.swing.JLabel ageValueLabel;
+    private javax.swing.JButton browseButton;
+    private javax.swing.JComboBox<String> collegeComboBox;
+    private javax.swing.JLabel collegeLabel;
+    private javax.swing.JComboBox<String> continentComboBox;
+    private javax.swing.JLabel continentLabel;
+    private javax.swing.JLabel dobLabel;
+    private javax.swing.JSpinner dobSpinner;
+    private javax.swing.JLabel emailLabel;
+    private javax.swing.JTextField emailTextField;
+    private javax.swing.JLabel experienceLabel;
+    private javax.swing.JScrollPane experienceScrollPane;
+    private javax.swing.JTextArea experienceTextArea;
+    private javax.swing.JRadioButton femaleRadioButton;
+    private javax.swing.JLabel firstNameLabel;
+    private javax.swing.JTextField firstNameTextField;
+    private javax.swing.ButtonGroup genderButtonGroup;
+    private javax.swing.JLabel genderLabel;
+    private javax.swing.JLabel hobbyLabel;
+    private javax.swing.JScrollPane hobbyScrollPane;
+    private javax.swing.JTextArea hobbyTextArea;
+    private javax.swing.JLabel lastNameLabel;
+    private javax.swing.JTextField lastNameTextField;
+    private javax.swing.JRadioButton maleRadioButton;
+    private javax.swing.JRadioButton otherRadioButton;
+    private javax.swing.JLabel phoneLabel;
+    private javax.swing.JTextField phoneTextField;
+    private javax.swing.JLabel photoPreviewLabel;
+    private javax.swing.JLabel photoTitleLabel;
+    private javax.swing.JButton removePhotoButton;
+    // End of variables declaration//GEN-END:variables
 }
