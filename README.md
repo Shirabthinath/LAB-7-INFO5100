@@ -65,36 +65,23 @@ The `customerdb` database and `student_profile` table are created automatically 
 ## Screenshots
 
 ### Create user
-A new student (Vijay C) is validated and saved to MySQL; the popup confirms it.
-
 ![Create user](screenshots/01_create_user.png)
 
 ### Update user
-The fields are unlocked with **Edit**, changed (hobbies), and saved with **Submit**.
-
 ![Update user](screenshots/02_update_user.png)
 
 ### View users (JTable)
-Students are loaded from MySQL into the `JTable`. Selecting a row (Harry Brook) shows the full profile below the table.
+Three students loaded from MySQL, including **Punith Mutta (ID 6)**. Selecting a row shows the full profile below the table.
 
 ![View users](screenshots/03_view_users.png)
 
 ### Delete user
-The selected student (Vijay C, ID 57) is deleted after confirmation, and the table reloads without that row. (IDs skip numbers because MySQL's auto-increment also counts rejected inserts, such as duplicate emails.)
+Student **Punith Mutta (ID 6)** was selected and deleted; the table below was reloaded from the database and no longer contains that row.
 
 ![Delete user](screenshots/04_delete_user.png)
 
 ### Duplicate email check
-A student with an email that is already registered is rejected by the database (`UNIQUE` constraint), and the app shows a clear message.
-
 ![Duplicate email check](screenshots/05_duplicate_email.png)
 
 ### Data in MySQL Workbench
-The same students stored in `customerdb.student_profile`.
-
 ![Data in MySQL Workbench](screenshots/06_mysql_workbench.png)
-
-### Design view (NetBeans GUI Builder)
-`FormJPanel` opened in the **Design** tab, with the Palette, the component Navigator and the Properties panel. `MainJFrame`, `ViewJPanel` and `StudentDetailsPanel` each also have a `.form` file next to their `.java` file.
-
-![Design view](screenshots/07_design_view.png)
